@@ -1,0 +1,31 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: inference-rate-limit
+  namespace: ai-platform
+config:
+  minute: 120
+  policy: local
+plugin: rate-limiting
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: llm-inference-ingress
+  namespace: ai-platform
+  annotations:
+    konghq.com/plugins: inference-rate-limit
+    konghq.com/strip-path: "true"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: api.ejpinangog.internal
+      http:
+        paths:
+          - path: /v1/inference
+            pathType: Prefix
+            backend:
+              service:
+                name: llm-inference-svc
+                port:
+                  number: 8000

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-inference-engine
+  namespace: ai-platform
+  labels:
+    app: llm-inference
+    tier: ml-serving
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: llm-inference
+  template:
+    metadata:
+      labels:
+        app: llm-inference
+    spec:
+      nodeSelector:
+        accelerator: nvidia-gpu
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: inference-server
+          image: ghcr.io/ejpinangog/vllm-serving:v0.6.3
+          ports:
+            - containerPort: 8000
+              name: http-metrics
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+              memory: "24Gi"
+            requests:
+              cpu: "4"
+              memory: "16Gi"
